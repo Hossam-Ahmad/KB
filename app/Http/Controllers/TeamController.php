@@ -225,6 +225,37 @@ class TeamController extends Controller
         ]);
     }
 
+    public function loginApi($admin_token,$team_name)
+    {
+        if($admin_token == null){
+            $data=array("error_id"=>1,"desc"=>"Admin's token is missing");
+            return response()->json($data, 400);
+        }
+
+        $user = DB::table('users')
+            ->where('remember_token',$admin_token)
+            ->get();
+
+        if(count($user) == 0){
+            $data=array("error_id"=>2,"desc"=>"Invalid admin's token");
+            return response()->json($data, 400);
+        }
+
+        $params = array($admin_token , $team_name);
+
+        if ($data = $this->user->validateApi($params)) {
+            Auth::login($data, true);
+
+            return redirect()->route('dashboard', [
+                $data->team_slug,
+            ]);
+        }
+
+        return redirect()->back()->withErrors([
+            'wrong_credential' => 'Credentials are not valid.',
+        ]);
+    }
+
     /**
      * Show create team view.
      *
@@ -430,6 +461,7 @@ class TeamController extends Controller
         $admin_last_name = $request->input('admin_last_name');
         $admin_password = $request->input('admin_password');
         $admin_email = $request->input('admin_email');
+        $admin_token = null;
 
         if($company_name == null || $subdomain == null || $admin_first_name == null || $admin_last_name == null || $admin_password == null || $admin_email == null){
             $data=array("error_id"=>3,"desc"=>"Attribute or more of the request is missing");
@@ -452,8 +484,7 @@ class TeamController extends Controller
             return response()->json($data, 400);
         }
 
-        
-
+        exec("cpapi2 --user=hubduacp SubDomain addsubdomain domain=".$subdomain." rootdomain=hubbdesk.com dir=%2Fpublic_html disallowdot=1");
 
         $tenant_id = null;
 
@@ -466,6 +497,14 @@ class TeamController extends Controller
             'password'    => Hash::make($admin_password),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
+        ]);
+
+        $admin_token = $this->create_token($admin_id);
+
+        DB::table('users')
+        ->where("id",$admin_id)
+        ->update([
+            'remember_token' => $admin_token,
         ]);
 
         if($logo == null){
@@ -509,12 +548,13 @@ class TeamController extends Controller
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
+        
 
         $data = null;
         if($logo == null){
-            $data=array("admin_id"=>$admin_id,"tenant_id"=>$tenant_id,"tenant_name"=>$company_name,"subdomain"=>$subdomain);
+            $data=array("admin_id"=>$admin_id,"admin_token"=>$admin_token,"tenant_id"=>$tenant_id,"tenant_name"=>$company_name,"subdomain"=>$subdomain);
         }else{
-            $data=array("admin_id"=>$admin_id,"tenant_id"=>$tenant_id,"tenant_name"=>$company_name,"subdomain"=>$subdomain,"logo"=>"http://hubbdesk.com/img/avatars/".$imageName);
+            $data=array("admin_id"=>$admin_id,"admin_token"=>$admin_token,"tenant_id"=>$tenant_id,"tenant_name"=>$company_name,"subdomain"=>$subdomain,"logo"=>"http://hubbdesk.com/img/avatars/".$imageName);
         }
         return response()->json($data, 200);
     }
@@ -528,6 +568,7 @@ class TeamController extends Controller
             $data=array("error_id"=>1,"desc"=>"Invalid tenant id");
             return response()->json($data, 400);
         }
+        $subdomain = $teams[0]->subdomain;
         DB::table('teams')
             ->where('id',$tenant_id)
             ->delete();
@@ -537,6 +578,7 @@ class TeamController extends Controller
         DB::table('users_roles')
             ->where('team_id',$tenant_id)
             ->delete();
+        exec("cpapi2 --user=hubduacp SubDomain delsubdomain domain=".$subdomain.".hubbdesk.com");
         $data=array("status"=>"Success");
         return response()->json($data, 200);
     }
@@ -555,6 +597,9 @@ class TeamController extends Controller
             $data=array("error_id"=>2,"desc"=>"subdomain is missing");
             return response()->json($data, 400);
         }
+        $old_subdomain = $teams[0]->subdomain;
+        exec("cpapi2 --user=hubduacp SubDomain delsubdomain domain=".$old_subdomain.".hubbdesk.com");
+        exec("cpapi2 --user=hubduacp SubDomain addsubdomain domain=".$subdomain." rootdomain=hubbdesk.com dir=%2Fpublic_html disallowdot=1");
         DB::table('teams')
             ->where('id',$tenant_id)
             ->update(['subdomain'=>$subdomain]);
@@ -642,6 +687,13 @@ class TeamController extends Controller
             'updated_at' => Carbon::now(),
         ]);
 
+        $admin_token = $this->create_token($admin_id);
+        DB::table('users')
+            ->where("id",$admin_id)
+            ->update([
+                'remember_token' => $admin_token,
+            ]);
+
         DB::table('user_teams')->insert([
             'user_id'    => $admin_id,
             'team_id'    => $tenant_id,
@@ -657,7 +709,7 @@ class TeamController extends Controller
             'updated_at' => Carbon::now(),
         ]);
 
-        $data=array("admin_id"=>$admin_id,"tenant_id"=>$tenant_id,"admin_first_name"=>$admin_first_name,"admin_last_name"=>$admin_last_name,"admin_email"=>$admin_email,"admin_password"=>$admin_password);
+        $data=array("admin_id"=>$admin_id,"admin_token"=>$admin_token,"tenant_id"=>$tenant_id,"admin_first_name"=>$admin_first_name,"admin_last_name"=>$admin_last_name,"admin_email"=>$admin_email,"admin_password"=>$admin_password);
         return response()->json($data, 200);
     }
 
@@ -715,6 +767,11 @@ class TeamController extends Controller
         $tenant_id = $request->input('tenant_id');
         $query = $request->input('query');
 
+        if($query == null){
+            $data=array("error_id"=>2,"desc"=>"Query is missing");
+            return response()->json($data, 400);
+        }
+
         if($tenant_id == null){
             $wikis = DB::table('teams')->join('wiki', 'teams.id', '=', 'wiki.team_id')->where('wiki.name', 'like', '%' . $query . '%')->take(5)->get();
         }else{
@@ -734,7 +791,6 @@ class TeamController extends Controller
 
         return view('results', compact('results'));
     }
-
 
     public function searchWebDetails($team_slug,$space_slug,$wiki_slug){
         $team_id = DB::table('teams')->where('slug', 'like', $team_slug)->value('id');
@@ -834,6 +890,16 @@ class TeamController extends Controller
 
     public function slug_paramater($val){
         return str_replace(' ','_',strtolower($val));
+    }
+
+    public function create_token($admin_id){
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
+        $payload = json_encode(['admin_id' => $admin_id]);
+        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+        $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, 'abC123!', true);
+        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
     }
 
 }

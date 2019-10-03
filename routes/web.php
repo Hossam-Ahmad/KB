@@ -8,21 +8,27 @@ Route::group(['prefix' => 'Hubb_api', 'middleware' => 'guest'], function () {
     Route::post('update_name_logo', 'TeamController@update_name_logoApi');
     Route::post('create_admin', 'TeamController@create_adminApi');
     Route::post('update_admin', 'TeamController@update_adminApi');
+    Route::get('login/{admin_token}/{team_name}', 'TeamController@loginApi');
 });
 
 Route::post('web/KBsearch', 'TeamController@searchWeb');
 
 Route::get('logout', 'UserController@logout')->name('logout');
 
-Route::group(['domain' => '{subdomain}.localhost'], function () {
-    Route::get('/', 'HomeController@home2');
+Route::domain('www.hubbdesk.com')->group(function () {
+    Route::get('/', 'HomeController@home');
+});
+
+Route::domain('{subdomain}.hubbdesk.com')->group(function () {
+    Route::get('/', 'HomeController@customerPortal');
+    Route::get('/kb', 'HomeController@home2');
 });
 
 Route::group(['middleware' => 'guest'], function () {
-    Route::get('KBsearch/{team}/{space}/{wiki}', 'TeamController@searchWebDetails');
+    Route::get('/KBsearch/{team}/{space}/{wiki}', 'TeamController@searchWebDetails');
     Route::get('/', 'HomeController@home')->name('home');
     Route::get('team/login', 'TeamController@login')->name('team.login');
-    Route::post('team/login', 'TeamController@postLogin')->name('team.postlogin');
+    Route::post('team/login', 'kb\app\Http\Controllers\TeamController@postLogin')->name('team.postlogin');
     Route::get('team/create', 'TeamController@create')->name('team.create');
     Route::post('team/create', 'TeamController@store')->name('team.store');
     Route::get('password/reset', 'UserController@showLinkRequestForm')->name('password.request');

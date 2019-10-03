@@ -283,6 +283,23 @@ class User extends Authenticatable
         return false;
     }
 
+    public function validateApi($params)
+    {
+        $user = $this
+            ->join('user_teams', 'users.id', '=', 'user_teams.user_id')
+            ->join('teams', 'user_teams.team_id', '=', 'teams.id')
+            ->where('teams.name', '=', $params[1])
+            ->where('users.remember_token', '=', $params[0])
+            ->select('users.*', 'teams.slug as team_slug')
+            ->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        return false;
+    }
+
     /**
      * Validate if a user has permission to visit a page,
      *
