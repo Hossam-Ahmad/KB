@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Session;
 use Image;
 use Hash;
+use Cookie;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Team;
 use App\Models\Role;
 use App\Models\Space;
 use App\Models\Invite;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -227,6 +228,10 @@ class TeamController extends Controller
 
     public function loginApi($admin_token,$team_name)
     {
+
+        Auth::logout();
+        Session::flush();
+
         if($admin_token == null){
             $data=array("error_id"=>1,"desc"=>"Admin's token is missing");
             return response()->json($data, 400);
@@ -242,8 +247,10 @@ class TeamController extends Controller
         }
 
         $params = array($admin_token , $team_name);
+        
 
         if ($data = $this->user->validateApi($params)) {
+            var_dump($data);
             Auth::login($data, true);
 
             return redirect()->route('dashboard', [
@@ -403,8 +410,8 @@ class TeamController extends Controller
         $data  = [];
         $query = $this->request->get('q');
         $team  = Auth::user()->getTeam();
-
-        $wikis   = Team::find($team->id)->wikis()->where('name', 'like', '%' . $query . '%')->take(5)->get();
+        
+        $wikis   = Team::find($team->id)->wikis()->where('name', 'like', '%' . $query . '%')->orWhere('description', 'like', '%' . $query . '%')->take(5)->get();
         $spaces  = Team::find($team->id)->spaces()->where('name', 'like', '%' . $query . '%')->take(5)->get();
         $pages   = Team::find($team->id)->pages()->where('name', 'like', '%' . $query . '%')->take(5)->get();
         $members = Team::find($team->id)->members()->where('name', 'like', '%' . $query . '%')->take(5)->get();
@@ -423,7 +430,10 @@ class TeamController extends Controller
         $query = $request->input('query');
 
         if($tenant_id == null){
-            $wikis = DB::table('teams')->join('wiki', 'teams.id', '=', 'wiki.team_id')->where('wiki.name', 'like', '%' . $query . '%')->take(5)->get();
+            $wikis = DB::table('teams')
+            ->join('wiki', 'teams.id', '=', 'wiki.team_id')
+            ->where('wiki.name', 'like', '%' . $query . '%')
+            ->orWhere('description', 'like', '%' . $query . '%')->take(5)->get();
         }else{
             $teams = DB::table('teams')
                 ->where('id',$tenant_id)
@@ -436,7 +446,11 @@ class TeamController extends Controller
                 $data=array("error_id"=>2,"desc"=>"Query is missing");
                 return response()->json($data, 400);
             }
-            $wikis = DB::table('teams')->where('teams.id', $tenant_id)->join('wiki', 'teams.id', '=', 'wiki.team_id')->where('wiki.name', 'like', '%' . $query . '%')->take(5)->get();
+            $wikis = DB::table('teams')
+            ->join('wiki', 'teams.id', '=', 'wiki.team_id')
+            ->where([['teams.id', $tenant_id],['wiki.name', 'like', '%' . $query . '%']])
+            ->orWhere([['teams.id', $tenant_id],['description', 'like', '%' . $query . '%']])
+            ->take(5)->get();
         }
 
         $wiki_data = [];
@@ -475,16 +489,6 @@ class TeamController extends Controller
             $data=array("error_id"=>1,"desc"=>"Subdomain is already taken");
             return response()->json($data, 400);
         }
-
-        $users = DB::table('users')
-                ->where('email','like',$admin_email)
-                ->get();
-        if(count($users) > 0){
-            $data=array("error_id"=>2,"desc"=>"Admin’s email is already taken");
-            return response()->json($data, 400);
-        }
-
-        exec("cpapi2 --user=hubduacp SubDomain addsubdomain domain=".$subdomain." rootdomain=hubbdesk.com dir=%2Fpublic_html disallowdot=1");
 
         $tenant_id = null;
 
@@ -667,7 +671,10 @@ class TeamController extends Controller
         }
 
         $users = DB::table('users')
-                ->where('email','like',$admin_email)
+                ->join('user_teams', 'user_teams.user_id', '=', 'users.id')
+                ->join('teams', 'user_teams.team_id', '=', 'teams.id')
+                ->where('users.email', 'like', $admin_email)
+                ->where('teams.id', $tenant_id)
                 ->get();
         if(count($users) > 0){
             $data=array("error_id"=>2,"desc"=>"Admin’s email is already taken");
@@ -773,9 +780,17 @@ class TeamController extends Controller
         }
 
         if($tenant_id == null){
-            $wikis = DB::table('teams')->join('wiki', 'teams.id', '=', 'wiki.team_id')->where('wiki.name', 'like', '%' . $query . '%')->take(5)->get();
+            $wikis = DB::table('teams')->join('wiki', 'teams.id', '=', 'wiki.team_id')
+            ->where('wiki.name', 'like', '%' . $query . '%')
+            ->orWhere('wiki.description', 'like', '%' . $query . '%')
+            ->take(5)
+            ->get();
         }else{
-            $wikis = DB::table('teams')->where('teams.id', $tenant_id)->join('wiki', 'teams.id', '=', 'wiki.team_id')->where('wiki.name', 'like', '%' . $query . '%')->take(5)->get();
+            $wikis = DB::table('teams')
+            ->where([['teams.id', $tenant_id],['wiki.name', 'like', '%' . $query . '%']])
+            ->orWhere([['teams.id', $tenant_id],['description', 'like', '%' . $query . '%']])
+            ->join('wiki', 'teams.id', '=', 'wiki.team_id')
+            ->take(5)->get();
         }
 
         $results = [];

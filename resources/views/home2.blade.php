@@ -1,9 +1,9 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('content')
 	<div class="home-con">
         <div class="header-bg">
-            <!-- @include('partials.home-nav') -->
+       
             <div>
                 <div style="padding: 109px 0px;" class="text-center">
                     <div style="margin-bottom: 45px;">
@@ -22,11 +22,9 @@
 						border-radius: 25px !important;
 						text-align: center;
 					">
+					<input type="submit" value="search" style="width: 15%;height: 35px;border-radius: 25px !important;background-color: #303232;border: 1px solid white;color: #fff;">
 					</form>
-					<div class="brand-buttons text-center">
-                        <a href="{{ route('team.create') }}" class="btn btn-default home-head-btn">Create Company</a>
-                        <a href="{{ route('team.login') }}" class="btn btn-default home-head-btn">Login Company</a>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -41,7 +39,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/browser.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Elegant UI</h4>
@@ -54,7 +52,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/devices.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Touch-Optimized</h4>
@@ -67,7 +65,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/lightning.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Fast</h4>
@@ -80,7 +78,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/megaphone.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Notifications</h4>
@@ -93,7 +91,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/tag.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Tags</h4>
@@ -106,7 +104,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/chat.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Instant Replies</h4>
@@ -119,7 +117,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/shield.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Powerful Permissions</h4>
@@ -132,7 +130,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 45px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/clock.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Real-Time Activity</h4>
@@ -145,7 +143,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 38px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/padlock.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Moderation Tools</h4>
@@ -158,7 +156,7 @@
 				<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="margin-bottom: 38px;">
 					<div class="media">
 						<div class="pull-left" style="padding-right: 20px;">
-							<img src="img/icons/text.png" class="media-object">
+							
 						</div>
 						<div class="media-body">
 							<h4 class="media-heading" style="margin-bottom: 10px; font-size: 16px; font-weight: 600; line-height: 26px; color: #444444;">Powerful Formatting</h4>
